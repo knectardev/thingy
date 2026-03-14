@@ -1,0 +1,31 @@
+Recommended Cursor Prompt
+Context: The "Thingy" backend architecture is fully implemented, with a modular handler pattern in /lib/handlers/. I am now ready to implement the real integration for lib/handlers/sheets.ts to append new t-shirt ideas to my Google Sheet: https://docs.google.com/spreadsheets/d/1OTU37oAUMazJsaHY2DeS3FJ2I6kI88EsJX9fMPDMOaM/edit#gid=0.
+
+Task: Implement lib/handlers/sheets.ts.
+
+Requirements:
+
+Authentication: Use google-spreadsheet with service account credentials stored in environment variables (e.g., GOOGLE_SERVICE_ACCOUNT_EMAIL and GOOGLE_PRIVATE_KEY). Assume these exist in .env.local and add a comment to remind me to set them up.
+
+Logic:
+
+The handler must accept (content: string, thingyId: number).
+
+It must append a row with two columns: A (Text) = content, B (Source) = "Thingy PWA".
+
+Logging: Follow the .cursorrules requirement to call logger.log() at the start and end of the function.
+
+Reliability: >    - Wrap the Google API call in an explicit try/catch block.
+
+If the API call fails, ensure it does not crash the system, but log the error appropriately.
+
+Please analyze @lib/handlers/sheets.ts and replace the current stub with this production implementation.
+
+Key Technical Considerations for this Integration
+Service Account: To make this work, you will need to share your Google Sheet with the email address of your Google Cloud service account with "Editor" permissions.
+
+
+Environment Variables: Since your .cursorrules requires explicit try/catch and typed interfaces, ensure Cursor also adds a check at the start of the handler to verify that the required environment variables are present before attempting the API call.
+
+
+Structure: Your existing sheets.ts stub is already set up to be an async function exported from a modular handler pattern, so this integration will be a seamless drop-in replacement.

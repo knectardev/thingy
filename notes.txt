@@ -1,40 +1,45 @@
-Goal: Initialize the "Thingy" project backend and routing structure based on the modular architecture defined.
+Context: The backend routing, database ingestion, and logging for the "Thingy" capture system are fully implemented and verified via tests.
 
-Context:
+Task: Build the frontend UI in @app/page.tsx to serve as the "remote control" for this system.
 
-This is a personal "capture-on-the-go" PWA.
+UI Requirements:
 
-Tech Stack: Next.js (App Router), Vercel Postgres, TypeScript, Tailwind CSS.
+Capture Interface:
 
-Core Requirement: Real-time ingestion. When I submit text from the PWA, the system must parse a trailing keyword token (e.g., #task, #idea), route it to the correct handler, and log the execution path for debugging.
+A clean, mobile-first textarea with a placeholder (e.g., "Capture a thought...").
 
-Task 1: Setup .cursorrules
-Create a file named .cursorrules in the root directory with the following Golden Rules:
+A primary "Submit" button.
 
-Language: Always use TypeScript.
+On submit:
 
-Structure: Follow the handler pattern in /lib/handlers/ for any new integration.
+Disable the button to prevent double-clicks.
 
-Logging: Always include a logger.log() call from /lib/logger.js at the start and end of every handler.
+POST the text content to /api/ingest.
 
-UI/UX: Keep UI components simple; favor accessibility and mobile-first layout.
+Clear the textarea upon success and briefly show a success state.
 
-Reliability: Enforce early returns, typed interfaces, and explicit try/catch blocks.
+Activity Feed:
 
-Task 2: Architectural Implementation
+Beneath the input, create a real-time list of recent activity.
 
-Analyze: Examine the current folder structure and report back if anything is missing.
+Use useEffect and setInterval (or a SWR/React Query pattern) to poll GET /api/logs every 5 seconds.
 
-Schema: Create the SQL schema for execution_logs (storing timestamp, action, and status).
+Display the log entries in a clean list, showing the action and status for the last 50 captures.
 
-Utility: Implement /lib/logger.js as an abstraction for writing logs to Postgres.
+Technical Constraints (Strictly Follow .cursorrules):
 
-Endpoints: Implement /api/ingest.js (receiving { text, token }) and a /api/logs.js (returning history).
+Styling: Use Tailwind CSS for a minimalist, accessible, mobile-first design.
 
-Router: Create /lib/router.js with a skeleton map for tokens.
+Reliability: Wrap API calls in try/catch blocks.
 
-Cursor Operational Guidelines (Strictly Follow):
+Types: Use a Log interface for the activity feed data.
 
-Use @Mentions: Whenever working on a specific file (e.g., @router.js), use the @-mention to provide context.
+Structure: Keep components modular if you decide to separate the Feed and the Input into distinct sub-components.
 
-Plan Mode: For any complex request, you MUST generate a step-by-step implementation plan first before writing any code. This is non-negotiable.
+Start by analyzing the current state of @app/page.tsx and replacing the default template with this new interface.
+
+Additional details: 
+
+The "Double-Click" Defense: Since you built idempotency into your backend, remind the AI to include a client-side UUID in the POST request body so the UI perfectly matches the backend safety logic you already implemented.
+
+Empty State: Please add an "Empty State" message for the Activity Feed so the UI looks clean before you've made your first capture.
