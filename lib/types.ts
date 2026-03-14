@@ -21,7 +21,12 @@ const TIME_DIVISIONS: { amount: number; unit: Intl.RelativeTimeFormatUnit }[] = 
 ];
 
 export function timeAgo(isoString: string): string {
-  let seconds = (new Date(isoString).getTime() - Date.now()) / 1000;
+  // Postgres TIMESTAMP (without tz) returns values in UTC but without a Z suffix.
+  // Append Z so JS Date parses it as UTC rather than local time.
+  const normalized = isoString.endsWith("Z") || /[+-]\d{2}:?\d{2}$/.test(isoString)
+    ? isoString
+    : isoString + "Z";
+  let seconds = (new Date(normalized).getTime() - Date.now()) / 1000;
 
   for (const { amount, unit } of TIME_DIVISIONS) {
     if (Math.abs(seconds) < amount) {
