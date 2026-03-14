@@ -1,45 +1,17 @@
-Context: The backend routing, database ingestion, and logging for the "Thingy" capture system are fully implemented and verified via tests.
+Context: I have a Node.js script that previously imported complex, semi-structured backlog data into GitHub issues. I want to modernize this into a simple, reusable utility for the "Thingy" app.
 
-Task: Build the frontend UI in @app/page.tsx to serve as the "remote control" for this system.
+Task: Create a new file lib/scripts/import-lendl.ts that accomplishes the following:
 
-UI Requirements:
+Trigger: It should accept a raw text input (from a file or stdin). The script should parse this text to find items tagged with #lendl task or #lendle task.
 
-Capture Interface:
+Handler Integration: Instead of complex GitHub CLI orchestration, the script should iterate over the extracted items and call my existing lib/router.ts route() function for each item.
 
-A clean, mobile-first textarea with a placeholder (e.g., "Capture a thought...").
+This way, if a user tags a block of text with #lendl task, the router will process each task according to my existing "Thingy" handlers.
 
-A primary "Submit" button.
+Idempotency: Since I am using an idempotency key (UUID) in my system, please ensure this script generates a unique UUID for each imported task so that the /api/ingest logic (or the handler logic) can prevent duplicates if run multiple times.
 
-On submit:
+Logging: Use the existing lib/logger.ts or console.log for status updates (e.g., "Imported X tasks").
 
-Disable the button to prevent double-clicks.
+Simplicity: Remove all the GitHub-specific dependencies (execSync, yaml, gh-cli). Keep it as a pure TypeScript utility script that runs in the project environment.
 
-POST the text content to /api/ingest.
-
-Clear the textarea upon success and briefly show a success state.
-
-Activity Feed:
-
-Beneath the input, create a real-time list of recent activity.
-
-Use useEffect and setInterval (or a SWR/React Query pattern) to poll GET /api/logs every 5 seconds.
-
-Display the log entries in a clean list, showing the action and status for the last 50 captures.
-
-Technical Constraints (Strictly Follow .cursorrules):
-
-Styling: Use Tailwind CSS for a minimalist, accessible, mobile-first design.
-
-Reliability: Wrap API calls in try/catch blocks.
-
-Types: Use a Log interface for the activity feed data.
-
-Structure: Keep components modular if you decide to separate the Feed and the Input into distinct sub-components.
-
-Start by analyzing the current state of @app/page.tsx and replacing the default template with this new interface.
-
-Additional details: 
-
-The "Double-Click" Defense: Since you built idempotency into your backend, remind the AI to include a client-side UUID in the POST request body so the UI perfectly matches the backend safety logic you already implemented.
-
-Empty State: Please add an "Empty State" message for the Activity Feed so the UI looks clean before you've made your first capture.
+Constraint: Please adhere to the architectural rules in .cursorrules—specifically, keep the code modular, use typed interfaces, and wrap operations in try/catch.

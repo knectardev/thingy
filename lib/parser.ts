@@ -11,7 +11,7 @@ export function parseInput(text: string): ParsedInput {
     return { content: trimmed, token: null };
   }
 
-  const token = match[1];
+  const token = match[1].toLowerCase();
   const content = trimmed.slice(0, match.index).trim();
 
   return { content, token };
