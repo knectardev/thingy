@@ -22,6 +22,9 @@
 .DS_Store
 *.pem
 
+# service account keys
+thingy-*.json
+
 # debug
 npm-debug.log*
 yarn-debug.log*
