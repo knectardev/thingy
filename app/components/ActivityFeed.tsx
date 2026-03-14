@@ -13,6 +13,14 @@ const DESTINATION_LINKS: Record<string, { label: string; url: string }> = {
     label: "GitHub",
     url: "https://github.com/knectardev/lot/issues",
   },
+  lot: {
+    label: "GitHub (lot)",
+    url: "https://github.com/knectardev/lot/issues",
+  },
+  feature: {
+    label: "GitHub (lot)",
+    url: "https://github.com/knectardev/lot/issues",
+  },
   lendl: {
     label: "GitHub (lot)",
     url: "https://github.com/knectardev/lot/issues",
