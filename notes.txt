@@ -1,0 +1,40 @@
+Goal: Initialize the "Thingy" project backend and routing structure based on the modular architecture defined.
+
+Context:
+
+This is a personal "capture-on-the-go" PWA.
+
+Tech Stack: Next.js (App Router), Vercel Postgres, TypeScript, Tailwind CSS.
+
+Core Requirement: Real-time ingestion. When I submit text from the PWA, the system must parse a trailing keyword token (e.g., #task, #idea), route it to the correct handler, and log the execution path for debugging.
+
+Task 1: Setup .cursorrules
+Create a file named .cursorrules in the root directory with the following Golden Rules:
+
+Language: Always use TypeScript.
+
+Structure: Follow the handler pattern in /lib/handlers/ for any new integration.
+
+Logging: Always include a logger.log() call from /lib/logger.js at the start and end of every handler.
+
+UI/UX: Keep UI components simple; favor accessibility and mobile-first layout.
+
+Reliability: Enforce early returns, typed interfaces, and explicit try/catch blocks.
+
+Task 2: Architectural Implementation
+
+Analyze: Examine the current folder structure and report back if anything is missing.
+
+Schema: Create the SQL schema for execution_logs (storing timestamp, action, and status).
+
+Utility: Implement /lib/logger.js as an abstraction for writing logs to Postgres.
+
+Endpoints: Implement /api/ingest.js (receiving { text, token }) and a /api/logs.js (returning history).
+
+Router: Create /lib/router.js with a skeleton map for tokens.
+
+Cursor Operational Guidelines (Strictly Follow):
+
+Use @Mentions: Whenever working on a specific file (e.g., @router.js), use the @-mention to provide context.
+
+Plan Mode: For any complex request, you MUST generate a step-by-step implementation plan first before writing any code. This is non-negotiable.
