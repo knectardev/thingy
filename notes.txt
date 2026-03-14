@@ -1,17 +1,34 @@
-Context: I have a Node.js script that previously imported complex, semi-structured backlog data into GitHub issues. I want to modernize this into a simple, reusable utility for the "Thingy" app.
+Context: My "Thingy" app is fully functional with modular handlers for GitHub and Google Sheets. I now need to add a new destination: Gmail.
 
-Task: Create a new file lib/scripts/import-lendl.ts that accomplishes the following:
+Task: Implement lib/handlers/gmail.ts and integrate it into the capture pipeline.
 
-Trigger: It should accept a raw text input (from a file or stdin). The script should parse this text to find items tagged with #lendl task or #lendle task.
+Requirements:
 
-Handler Integration: Instead of complex GitHub CLI orchestration, the script should iterate over the extracted items and call my existing lib/router.ts route() function for each item.
+Trigger: The parser must support a new #email token (e.g., "Draft a response to John #email"). Update lib/parser.ts to recognize this new token.
 
-This way, if a user tags a block of text with #lendl task, the router will process each task according to my existing "Thingy" handlers.
+Handler Implementation:
 
-Idempotency: Since I am using an idempotency key (UUID) in my system, please ensure this script generates a unique UUID for each imported task so that the /api/ingest logic (or the handler logic) can prevent duplicates if run multiple times.
+Create lib/handlers/gmail.ts using the nodemailer library (or the Gmail API via googleapis).
 
-Logging: Use the existing lib/logger.ts or console.log for status updates (e.g., "Imported X tasks").
+The handler should send an email to a configurable address (e.g., process.env.GMAIL_TARGET_ADDRESS or my own address) with the capture content as the email body.
 
-Simplicity: Remove all the GitHub-specific dependencies (execSync, yaml, gh-cli). Keep it as a pure TypeScript utility script that runs in the project environment.
+Use a persistent Service Account or OAuth2 flow for authentication (add placeholders for GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, and GMAIL_REFRESH_TOKEN in .env.local).
 
-Constraint: Please adhere to the architectural rules in .cursorrules—specifically, keep the code modular, use typed interfaces, and wrap operations in try/catch.
+Router & UI:
+
+Add the email token to lib/router.ts.
+
+Update the ActivityFeed UI in app/components/ActivityFeed.tsx to include email: "Gmail" in TOKEN_DESTINATIONS.
+
+Logging: Adhere to .cursorrules by adding logger.log() at the start and end of the handler.
+
+Reliability: Wrap the email sending logic in a try/catch block to ensure that a failure to send an email does not halt the ingestion process.
+
+Constraint: Please analyze the existing handler implementations (like @lib/handlers/github.ts) and ensure this new Gmail handler matches the same asynchronous, logged, and typed interface.
+
+Important Considerations:
+Authentication: Unlike the Google Sheets service account (which uses a JSON key), Gmail integration typically requires an OAuth2 flow to get a refresh_token if you are sending as yourself. If you are using a workspace account, a service account with "Domain-Wide Delegation" is an alternative.
+
+Testing: Just like your other handlers, remember to add a mock test in tests/handlers.test.ts to ensure the router correctly dispatches to the handleGmail function.
+
+Environment: Make sure to document these new Gmail credentials in your .env.local just like you did for your Sheets integration.

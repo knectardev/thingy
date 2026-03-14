@@ -5,6 +5,8 @@ export interface ParsedInput {
 
 const COMPOUND_TOKENS: [RegExp, string][] = [
   [/#lendl[e]?\s+task[.!?,;:]*$/i, "lendl"],
+  [/#email\s+chris[.!?,;:]*$/i, "emailchris"],
+  [/#email\s+alana[.!?,;:]*$/i, "emailalana"],
 ];
 
 export function parseInput(text: string): ParsedInput {

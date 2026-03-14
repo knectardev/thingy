@@ -37,6 +37,14 @@ const DESTINATION_LINKS: Record<string, { label: string; url: string }> = {
     label: "Google Sheets",
     url: "https://docs.google.com/spreadsheets/d/1OTU37oAUMazJsaHY2DeS3FJ2I6kI88EsJX9fMPDMOaM/edit?gid=1434823540#gid=1434823540",
   },
+  emailchris: {
+    label: "Email (Chris)",
+    url: "mailto:chris.amato@knectar.com",
+  },
+  emailalana: {
+    label: "Email (Alana)",
+    url: "mailto:alana.kaczmarek@gmail.com",
+  },
 };
 
 const STATUS_STYLES: Record<string, string> = {

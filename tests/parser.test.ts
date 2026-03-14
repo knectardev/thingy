@@ -31,4 +31,19 @@ describe("parseInput", () => {
     const result = parseInput("T-shirt design #tshirt");
     expect(result).toEqual({ content: "T-shirt design", token: "tshirt" });
   });
+
+  it("extracts compound #email chris token", () => {
+    const result = parseInput("Draft a response to John #email chris");
+    expect(result).toEqual({ content: "Draft a response to John", token: "emailchris" });
+  });
+
+  it("extracts compound #email alana token", () => {
+    const result = parseInput("Pick up groceries #email alana");
+    expect(result).toEqual({ content: "Pick up groceries", token: "emailalana" });
+  });
+
+  it("handles #email chris case-insensitively", () => {
+    const result = parseInput("Meeting notes #Email Chris");
+    expect(result).toEqual({ content: "Meeting notes", token: "emailchris" });
+  });
 });

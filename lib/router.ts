@@ -1,6 +1,7 @@
 import { log } from "@/lib/logger";
 import { handleGitHub } from "@/lib/handlers/github";
 import { handleSheets } from "@/lib/handlers/sheets";
+import { emailChris, emailAlana } from "@/lib/handlers/gmail";
 import { handleUncategorized } from "@/lib/handlers/uncategorized";
 
 export type Handler = (content: string, thingyId: number) => Promise<void>;
@@ -13,6 +14,8 @@ const handlerMap: Record<string, Handler> = {
   lendle: handleGitHub,
   idea: handleSheets,
   tshirt: handleSheets,
+  emailchris: emailChris,
+  emailalana: emailAlana,
 };
 
 export async function route(

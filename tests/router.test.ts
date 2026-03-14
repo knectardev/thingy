@@ -12,6 +12,11 @@ vi.mock("@/lib/handlers/sheets", () => ({
   handleSheets: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock("@/lib/handlers/gmail", () => ({
+  emailChris: vi.fn().mockResolvedValue(undefined),
+  emailAlana: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock("@/lib/handlers/uncategorized", () => ({
   handleUncategorized: vi.fn().mockResolvedValue(undefined),
 }));
@@ -19,6 +24,7 @@ vi.mock("@/lib/handlers/uncategorized", () => ({
 import { route } from "@/lib/router";
 import { handleGitHub } from "@/lib/handlers/github";
 import { handleSheets } from "@/lib/handlers/sheets";
+import { emailChris, emailAlana } from "@/lib/handlers/gmail";
 
 describe("route", () => {
   it("maps 'task' to GitHub handler and 'idea' to Sheets handler", async () => {
@@ -35,5 +41,13 @@ describe("route", () => {
 
     await route("Add rate limiting", "lendle", 11);
     expect(handleGitHub).toHaveBeenCalledWith("Add rate limiting", 11);
+  });
+
+  it("maps 'emailchris' and 'emailalana' to Gmail handlers", async () => {
+    await route("Draft a response", "emailchris", 20);
+    expect(emailChris).toHaveBeenCalledWith("Draft a response", 20);
+
+    await route("Pick up groceries", "emailalana", 21);
+    expect(emailAlana).toHaveBeenCalledWith("Pick up groceries", 21);
   });
 });
