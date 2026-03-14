@@ -5,7 +5,7 @@ export interface ParsedInput {
 
 export function parseInput(text: string): ParsedInput {
   const trimmed = text.trim();
-  const match = trimmed.match(/#(\w+)$/);
+  const match = trimmed.match(/#(\w+)[.!?,;:]*$/);
 
   if (!match) {
     return { content: trimmed, token: null };
