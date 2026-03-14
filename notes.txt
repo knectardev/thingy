@@ -1,34 +1,25 @@
-Context: My "Thingy" app is fully functional with modular handlers for GitHub and Google Sheets. I now need to add a new destination: Gmail.
+Context: I am preparing to open-source my "Thingy" app. I want to provide high-quality documentation that sets expectations for other developers.
 
-Task: Implement lib/handlers/gmail.ts and integrate it into the capture pipeline.
+Task: Generate two files: README.md and CONTRIBUTING.md.
 
-Requirements:
+Requirements for README.md:
 
-Trigger: The parser must support a new #email token (e.g., "Draft a response to John #email"). Update lib/parser.ts to recognize this new token.
+Philosophy: Clearly state that this is a "bring-your-own-credentials" tool for personal automation. It is a utility for developers, not a SaaS product.
 
-Handler Implementation:
+Architecture Overview: Include a brief section on the "Glass Box" architecture (modular handlers in lib/handlers/, centralized routing, and real-time activity logging).
 
-Create lib/handlers/gmail.ts using the nodemailer library (or the Gmail API via googleapis).
+Getting Started: Create a "Configuration Checklist" that explicitly lists the environment variables required (GITHUB_TOKEN, GOOGLE_SERVICE_ACCOUNT_EMAIL, GMAIL_APP_PASSWORD, etc.).
 
-The handler should send an email to a configurable address (e.g., process.env.GMAIL_TARGET_ADDRESS or my own address) with the capture content as the email body.
+Token Guide: Document the supported "trigger" tokens (#idea, #lendl, #email) so users know how to use it immediately.
 
-Use a persistent Service Account or OAuth2 flow for authentication (add placeholders for GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, and GMAIL_REFRESH_TOKEN in .env.local).
+Disclaimer: Add a clear notice that the user is responsible for the costs, API limits, and security of the services they connect to.
 
-Router & UI:
+Requirements for CONTRIBUTING.md:
 
-Add the email token to lib/router.ts.
+Design Principles: Emphasize the existing .cursorrules: modularity, idempotency (client-side UUIDs), and high observability (logging).
 
-Update the ActivityFeed UI in app/components/ActivityFeed.tsx to include email: "Gmail" in TOKEN_DESTINATIONS.
+Adding Integrations: Briefly explain how to add a new handler (create file in lib/handlers/, update router.ts, add to ActivityFeed.tsx).
 
-Logging: Adhere to .cursorrules by adding logger.log() at the start and end of the handler.
+Testing Policy: Explain that all new handlers should include unit tests in tests/handlers.test.ts with mocked external dependencies.
 
-Reliability: Wrap the email sending logic in a try/catch block to ensure that a failure to send an email does not halt the ingestion process.
-
-Constraint: Please analyze the existing handler implementations (like @lib/handlers/github.ts) and ensure this new Gmail handler matches the same asynchronous, logged, and typed interface.
-
-Important Considerations:
-Authentication: Unlike the Google Sheets service account (which uses a JSON key), Gmail integration typically requires an OAuth2 flow to get a refresh_token if you are sending as yourself. If you are using a workspace account, a service account with "Domain-Wide Delegation" is an alternative.
-
-Testing: Just like your other handlers, remember to add a mock test in tests/handlers.test.ts to ensure the router correctly dispatches to the handleGmail function.
-
-Environment: Make sure to document these new Gmail credentials in your .env.local just like you did for your Sheets integration.
+Tone: Professional, direct, and developer-centric. No marketing fluff—focus on architectural clarity.
