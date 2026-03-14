@@ -17,7 +17,7 @@ export function parseInput(text: string): ParsedInput {
   // Also collapse any spaces after the last # (e.g., "# email chris" → "#email chris").
   const input = trimmed
     .replace(/^(.*)\b(?:hashtag|keyword)\s+/i, "$1#")
-    .replace(/^(.*)#\s+/s, "$1#");
+    .replace(/^(.*)#\s+/, "$1#");
 
   for (const [pattern, tok] of COMPOUND_TOKENS) {
     const match = input.match(pattern);
