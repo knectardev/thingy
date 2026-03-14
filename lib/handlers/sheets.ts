@@ -8,10 +8,12 @@ export async function handleSheets(
   content: string,
   thingyId: number
 ): Promise<void> {
-  await log(thingyId, "[Sheets] Handler started", "started");
+  await log(thingyId, "[Sheets] Connecting to Google Sheets API", "started");
 
   const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
   const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n");
+
+  console.log("[Sheets] env check — email:", !!email, "key length:", privateKey?.length ?? 0);
 
   if (!email || !privateKey) {
     await log(
@@ -43,5 +45,5 @@ export async function handleSheets(
     return;
   }
 
-  await log(thingyId, "[Sheets] Handler completed", "completed");
+  await log(thingyId, "[Sheets] Row appended successfully", "completed");
 }
