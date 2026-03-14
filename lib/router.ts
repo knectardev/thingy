@@ -8,6 +8,7 @@ export type Handler = (content: string, thingyId: number) => Promise<void>;
 const handlerMap: Record<string, Handler> = {
   task: handleGitHub,
   idea: handleSheets,
+  tshirt: handleSheets,
 };
 
 export async function route(

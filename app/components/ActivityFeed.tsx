@@ -11,6 +11,7 @@ interface ActivityFeedProps {
 const TOKEN_DESTINATIONS: Record<string, string> = {
   task: "GitHub",
   idea: "Google Sheets",
+  tshirt: "Google Sheets",
 };
 
 const STATUS_STYLES: Record<string, string> = {
