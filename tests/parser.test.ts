@@ -46,4 +46,39 @@ describe("parseInput", () => {
     const result = parseInput("Meeting notes #Email Chris");
     expect(result).toEqual({ content: "Meeting notes", token: "emailchris" });
   });
+
+  it("treats 'hashtag' as equivalent to #", () => {
+    const result = parseInput("Buy milk hashtag task");
+    expect(result).toEqual({ content: "Buy milk", token: "task" });
+  });
+
+  it("treats 'keyword' as equivalent to #", () => {
+    const result = parseInput("New concept keyword idea");
+    expect(result).toEqual({ content: "New concept", token: "idea" });
+  });
+
+  it("handles 'hashtag' with compound tokens", () => {
+    const result = parseInput("Fix the login hashtag email chris");
+    expect(result).toEqual({ content: "Fix the login", token: "emailchris" });
+  });
+
+  it("handles 'Hashtag' case-insensitively", () => {
+    const result = parseInput("Deploy update Hashtag lot");
+    expect(result).toEqual({ content: "Deploy update", token: "lot" });
+  });
+
+  it("handles spaces after # in simple tokens", () => {
+    const result = parseInput("test message # task");
+    expect(result).toEqual({ content: "test message", token: "task" });
+  });
+
+  it("handles spaces after # in compound tokens", () => {
+    const result = parseInput("test this message # email Chris");
+    expect(result).toEqual({ content: "test this message", token: "emailchris" });
+  });
+
+  it("handles spaces after hashtag keyword equivalent", () => {
+    const result = parseInput("reminder hashtag  email alana");
+    expect(result).toEqual({ content: "reminder", token: "emailalana" });
+  });
 });

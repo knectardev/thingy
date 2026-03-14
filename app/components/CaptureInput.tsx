@@ -157,6 +157,8 @@ export default function CaptureInput({ onCapture }: CaptureInputProps) {
     }
   }
 
+  const [helpOpen, setHelpOpen] = useState(false);
+
   return (
     <section className="w-full space-y-3">
       <label htmlFor="capture-input" className="sr-only">
@@ -224,16 +226,88 @@ export default function CaptureInput({ onCapture }: CaptureInputProps) {
         {submitting ? "Submitting..." : "Submit"}
       </button>
 
-      <div aria-live="polite" className="min-h-[1.5rem] text-center text-sm">
-        {feedback?.type === "success" && (
-          <p className="text-green-600 dark:text-green-400">
-            {feedback.message}
-          </p>
-        )}
-        {feedback?.type === "error" && (
-          <p className="text-red-600 dark:text-red-400">{feedback.message}</p>
-        )}
+      <div className="flex items-center justify-between">
+        <div aria-live="polite" className="min-h-[1.5rem] text-sm">
+          {feedback?.type === "success" && (
+            <p className="text-green-600 dark:text-green-400">
+              {feedback.message}
+            </p>
+          )}
+          {feedback?.type === "error" && (
+            <p className="text-red-600 dark:text-red-400">{feedback.message}</p>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => setHelpOpen(true)}
+          aria-label="Show keyword help"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-gray-300 text-sm font-semibold text-gray-400 transition-colors hover:border-blue-400 hover:text-blue-500 dark:border-gray-600 dark:text-gray-500 dark:hover:border-blue-500 dark:hover:text-blue-400"
+        >
+          ?
+        </button>
       </div>
+
+      {helpOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setHelpOpen(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl dark:bg-gray-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Keywords
+              </h3>
+              <button
+                onClick={() => setHelpOpen(false)}
+                aria-label="Close"
+                className="flex h-7 w-7 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+              >
+                &times;
+              </button>
+            </div>
+            <p className="mb-4 text-xs text-gray-500 dark:text-gray-400">
+              Add a keyword at the end of your capture to route it automatically.
+            </p>
+            <div className="space-y-4">
+              <KeywordGroup
+                title="GitHub Issues (lot)"
+                keywords={["#task", "#lot", "#feature", "#lendl task"]}
+              />
+              <KeywordGroup
+                title="Google Sheets"
+                keywords={["#idea", "#tshirt"]}
+              />
+              <KeywordGroup
+                title="Email"
+                keywords={["#email chris", "#email alana"]}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </section>
+  );
+}
+
+function KeywordGroup({ title, keywords }: { title: string; keywords: string[] }) {
+  return (
+    <div>
+      <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+        {title}
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {keywords.map((kw) => (
+          <span
+            key={kw}
+            className="rounded-md bg-blue-50 px-2 py-1 font-mono text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+          >
+            {kw}
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }
