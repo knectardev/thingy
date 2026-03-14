@@ -10,6 +10,8 @@ interface ActivityFeedProps {
 
 const TOKEN_DESTINATIONS: Record<string, string> = {
   task: "GitHub",
+  lendl: "GitHub (lot)",
+  lendle: "GitHub (lot)",
   idea: "Google Sheets",
   tshirt: "Google Sheets",
 };

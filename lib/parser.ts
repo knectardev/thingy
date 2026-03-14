@@ -3,8 +3,20 @@ export interface ParsedInput {
   token: string | null;
 }
 
+const COMPOUND_TOKENS: [RegExp, string][] = [
+  [/#lendl[e]?\s+task[.!?,;:]*$/i, "lendl"],
+];
+
 export function parseInput(text: string): ParsedInput {
   const trimmed = text.trim();
+
+  for (const [pattern, normalized] of COMPOUND_TOKENS) {
+    const match = trimmed.match(pattern);
+    if (match) {
+      return { content: trimmed.slice(0, match.index).trim(), token: normalized };
+    }
+  }
+
   const match = trimmed.match(/#(\w+)[.!?,;:]*$/);
 
   if (!match) {

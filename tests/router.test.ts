@@ -28,4 +28,12 @@ describe("route", () => {
     await route("New feature concept", "idea", 2);
     expect(handleSheets).toHaveBeenCalledWith("New feature concept", 2);
   });
+
+  it("maps 'lendl' and 'lendle' to GitHub handler", async () => {
+    await route("Fix auth flow", "lendl", 10);
+    expect(handleGitHub).toHaveBeenCalledWith("Fix auth flow", 10);
+
+    await route("Add rate limiting", "lendle", 11);
+    expect(handleGitHub).toHaveBeenCalledWith("Add rate limiting", 11);
+  });
 });
