@@ -8,6 +8,11 @@ interface ActivityFeedProps {
   refreshKey: number;
 }
 
+const TOKEN_DESTINATIONS: Record<string, string> = {
+  task: "GitHub",
+  idea: "Google Sheets",
+};
+
 const STATUS_STYLES: Record<string, string> = {
   completed:
     "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
@@ -100,14 +105,24 @@ export default function ActivityFeed({ refreshKey }: ActivityFeedProps) {
                   {log.status}
                 </span>
               </div>
-              <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
-                {log.timestamp ? timeAgo(log.timestamp) : ""}
+              {log.content && (
+                <p className="mt-1.5 text-sm text-gray-600 dark:text-gray-400 italic truncate">
+                  &ldquo;{log.content}&rdquo;
+                </p>
+              )}
+              <div className="mt-1 flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
+                <span>{log.timestamp ? timeAgo(log.timestamp) : ""}</span>
                 {log.token && (
-                  <span className="ml-2 font-mono text-gray-500 dark:text-gray-400">
+                  <span className="rounded bg-blue-50 px-1.5 py-0.5 font-mono text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
                     #{log.token}
                   </span>
                 )}
-              </p>
+                {log.token && (
+                  <span className="text-gray-400 dark:text-gray-500">
+                    &rarr; {TOKEN_DESTINATIONS[log.token] ?? "uncategorized"}
+                  </span>
+                )}
+              </div>
             </li>
           ))}
         </ul>
