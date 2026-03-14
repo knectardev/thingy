@@ -66,6 +66,9 @@ GOOGLE_PRIVATE_KEY="<service-account-private-key>"
 # Gmail (required for #email tokens)
 GMAIL_USER=<sending-gmail-address>
 GMAIL_APP_PASSWORD=<16-char-app-password>
+
+# Access control (required)
+THINGY_SECRET=<a-random-string-only-you-know>
 ```
 
 ### Setup
@@ -90,6 +93,17 @@ All external dependencies (Octokit, Google Sheets, Nodemailer) are mocked in tes
 2. Import the project in Vercel with the **Next.js** framework preset.
 3. Add all environment variables from the checklist above to the Vercel project settings.
 4. Deploy.
+5. Bookmark `https://<your-vercel-domain>/?key=<your-secret>` on your phone/browser for frictionless access.
+
+## Access Control
+
+Thingy is a personal tool, not a public service. Three layers prevent accidental discovery:
+
+1. **`robots.txt`** -- Tells compliant crawlers (Googlebot, Bingbot) not to index any page.
+2. **`X-Robots-Tag` header** -- Adds `noindex, nofollow, noarchive` to every response, catching bots that ignore `robots.txt`.
+3. **Shared-secret middleware** -- A `middleware.ts` checks for a `?key=` query parameter matching `THINGY_SECRET`. Requests without the correct key receive a `403 Forbidden` response. API routes (`/api/*`) and static assets (`/_next/*`) are excluded so the ingest endpoint and page resources remain functional.
+
+To access the app, bookmark the URL with your secret appended: `https://thingy-eta.vercel.app/?key=your-secret-code`. Anyone hitting the bare URL without the key gets a 403.
 
 ## Disclaimer
 
