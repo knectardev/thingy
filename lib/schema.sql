@@ -1,0 +1,16 @@
+CREATE TABLE IF NOT EXISTS thingies (
+  id SERIAL PRIMARY KEY,
+  client_id UUID NOT NULL UNIQUE,
+  content TEXT NOT NULL,
+  token VARCHAR(50),
+  status VARCHAR(20) DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS execution_logs (
+  id SERIAL PRIMARY KEY,
+  thingy_id INTEGER REFERENCES thingies(id),
+  action TEXT NOT NULL,
+  status VARCHAR(20) NOT NULL,
+  timestamp TIMESTAMP DEFAULT NOW()
+);

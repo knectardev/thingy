@@ -1,0 +1,22 @@
+# Thingy Capture System - Project Rules
+
+## Language
+- Always use TypeScript for all source files.
+
+## Structure
+- Follow the handler pattern in `/lib/handlers/` for any new integration.
+- Each handler module exports a single async function: `(content: string, thingyId: number) => Promise<void>`.
+
+## Logging
+- Always include a `logger.log()` call from `/lib/logger.ts` at the **start** and **end** of every handler.
+
+## UI/UX
+- Keep UI components simple.
+- Favor accessibility and mobile-first layout.
+- Use Tailwind CSS utility classes.
+
+## Reliability
+- Enforce early returns for invalid input.
+- Use typed interfaces for all data structures.
+- Wrap all async operations in explicit `try/catch` blocks.
+- Never let logging failures crash a request.
