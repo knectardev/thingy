@@ -105,6 +105,15 @@ Thingy is a personal tool, not a public service. Three layers prevent accidental
 
 To access the app, bookmark the URL with your secret appended: `https://thingy-eta.vercel.app/?key=your-secret-code`. Anyone hitting the bare URL without the key gets a 403.
 
+## Credits & Tooling
+
+This project is a demonstration of high-leverage "Team of One" engineering, made possible by:
+
+- **Product Management & Architecture:** Chris Amato @knectardev on GitHub
+- **Ideation & Strategy:** Gemini (Google)
+- **Agentic IDE:** Cursor
+- **LLM Intelligence:** Opus 4.6 (Anthropic)
+
 ## Disclaimer
 
 You are responsible for the costs, API rate limits, and security of the external services you connect. Thingy stores credentials only in environment variables and never commits them to the repository. Review your `.gitignore` to confirm `.env*.local` and key files are excluded.
