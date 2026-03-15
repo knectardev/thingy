@@ -10,29 +10,22 @@ const ROUTES = [
   { token: "#email alana", dest: "Gmail (Alana)" },
 ];
 
-export default function InfoSidebar() {
-  const [open, setOpen] = useState(false);
+interface InfoSidebarProps {
+  aboutOpen: boolean;
+  onAboutClose: () => void;
+}
 
+export default function InfoSidebar({ aboutOpen, onAboutClose }: InfoSidebarProps) {
   return (
     <>
-      {/* Mobile toggle */}
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label="About this app"
-        className="fixed bottom-4 right-4 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-gray-800 text-white shadow-lg transition-colors hover:bg-gray-700 lg:hidden dark:bg-gray-200 dark:text-gray-900 dark:hover:bg-gray-300"
-      >
-        i
-      </button>
-
-      {/* Mobile overlay */}
-      {open && (
+      {/* About modal (all screen sizes) */}
+      {aboutOpen && (
         <div
-          className="fixed inset-0 z-50 flex justify-end bg-black/40 lg:hidden"
-          onClick={() => setOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 lg:hidden"
+          onClick={onAboutClose}
         >
-          <aside
-            className="h-full w-72 overflow-y-auto bg-white p-5 shadow-xl dark:bg-gray-800"
+          <div
+            className="max-h-[80vh] w-full max-w-sm overflow-y-auto rounded-xl bg-white p-6 shadow-xl dark:bg-gray-800"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">
@@ -40,7 +33,7 @@ export default function InfoSidebar() {
                 About
               </h2>
               <button
-                onClick={() => setOpen(false)}
+                onClick={onAboutClose}
                 aria-label="Close"
                 className="flex h-7 w-7 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
               >
@@ -48,7 +41,7 @@ export default function InfoSidebar() {
               </button>
             </div>
             <SidebarContent />
-          </aside>
+          </div>
         </div>
       )}
 
