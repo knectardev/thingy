@@ -66,8 +66,11 @@ function SidebarContent() {
           What is Thingy?
         </h3>
         <p className="leading-relaxed">
-          A personal capture tool. Type or dictate a thought, tag it with a
-          keyword, and it routes automatically to the right place.
+          A minimalist personal capture tool. Thingy is a
+          bring-your-own-credentials utility for developers who want a single
+          input box that dispatches to multiple services. It is not a SaaS
+          product &mdash; you deploy your own instance, supply your own API
+          keys, and own your data.
         </p>
       </div>
 
@@ -126,6 +129,15 @@ function SidebarContent() {
           Every capture is logged to a Postgres database. Nothing is lost, even
           without a keyword &mdash; untagged captures are stored as
           uncategorized.
+        </p>
+      </div>
+
+      <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 dark:border-amber-800 dark:bg-amber-900/20">
+        <p className="text-xs leading-relaxed text-amber-800 dark:text-amber-300">
+          <span className="font-semibold">Heads up:</span> This is a live
+          instance connected to real services. Every submission creates actual
+          GitHub issues, spreadsheet rows, or emails. Please don&apos;t use it
+          for testing &mdash; spin up your own instance instead.
         </p>
       </div>
     </div>
