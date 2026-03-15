@@ -121,11 +121,74 @@ const STATUS_ICONS: Record<string, string> = {
   processing: "\u2026",
 };
 
+function GitHubIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.338c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2Z" />
+    </svg>
+  );
+}
+
+function GoogleSheetsIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z" fill="#0F9D58" />
+      <path d="M14 2v6h6" fill="#87CEAC" />
+      <rect x="8" y="12" width="8" height="1.5" rx=".5" fill="white" />
+      <rect x="8" y="15" width="8" height="1.5" rx=".5" fill="white" />
+      <rect x="11.5" y="12" width="1" height="4.5" fill="white" opacity=".6" />
+    </svg>
+  );
+}
+
+function GmailIcon({ className }: { className?: string }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="https://www.gstatic.com/images/branding/product/2x/gmail_2020q4_24dp.png"
+      alt="Gmail"
+      className={className}
+    />
+  );
+}
+
+function ServiceIcon({ token }: { token: string | null }) {
+  if (!token) return null;
+
+  const cls = "h-4 w-4 shrink-0";
+
+  if (["task", "lot", "feature", "lendl", "lendle"].includes(token)) {
+    return <GitHubIcon className={cls + " text-gray-700 dark:text-gray-300"} />;
+  }
+  if (["idea", "tshirt"].includes(token)) {
+    return <GoogleSheetsIcon className={cls} />;
+  }
+  if (["emailchris", "emailalana"].includes(token)) {
+    return <GmailIcon className={cls} />;
+  }
+
+  return null;
+}
+
+function serviceStyle(token: string | null): string {
+  if (!token) return "border-gray-200 bg-white dark:border-gray-700 dark:bg-transparent";
+  if (["task", "lot", "feature", "lendl", "lendle"].includes(token)) {
+    return "border-l-4 border-l-gray-900 border-y border-r border-y-gray-300 border-r-gray-300 bg-gray-100 dark:border-l-gray-300 dark:border-y-gray-600 dark:border-r-gray-600 dark:bg-gray-700/50";
+  }
+  if (["idea", "tshirt"].includes(token)) {
+    return "border-l-4 border-l-green-600 border-y border-r border-y-green-200 border-r-green-200 bg-green-100 dark:border-l-green-400 dark:border-y-green-800 dark:border-r-green-800 dark:bg-green-900/30";
+  }
+  if (["emailchris", "emailalana"].includes(token)) {
+    return "border-l-4 border-l-red-600 border-y border-r border-y-red-200 border-r-red-200 bg-red-100 dark:border-l-red-400 dark:border-y-red-800 dark:border-r-red-800 dark:bg-red-900/30";
+  }
+  return "border-gray-200 bg-white dark:border-gray-700 dark:bg-transparent";
+}
+
 function CaptureRow({ capture }: { capture: Capture }) {
   const dest = capture.token ? DESTINATION_LINKS[capture.token] : null;
 
   return (
-    <li className="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 dark:border-gray-700">
+    <li className={`flex items-center gap-3 rounded-lg px-4 py-3 ${serviceStyle(capture.token)}`}>
       <span
         className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
           capture.status === "completed"
@@ -147,6 +210,7 @@ function CaptureRow({ capture }: { capture: Capture }) {
           {dest && (
             <>
               <span>&rarr;</span>
+              <ServiceIcon token={capture.token} />
               <a
                 href={dest.url}
                 target="_blank"
