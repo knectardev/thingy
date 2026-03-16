@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, type TouchEvent } from "react";
 import type { LogEntry } from "@/lib/types";
 import { timeAgo } from "@/lib/types";
 
@@ -47,6 +47,29 @@ const DESTINATION_LINKS: Record<string, { label: string; url: string }> = {
   },
 };
 
+const GITHUB_TOKENS = ["task", "lot", "feature", "lendl", "lendle"];
+const SHEETS_TOKENS = ["idea", "tshirt"];
+const EMAIL_TOKENS = ["emailchris", "emailalana"];
+
+type DestinationFilter = "all" | "github" | "sheets" | "email" | "uncategorized";
+
+const DESTINATION_FILTERS: { value: DestinationFilter; label: string }[] = [
+  { value: "all", label: "All destinations" },
+  { value: "github", label: "GitHub Issues" },
+  { value: "sheets", label: "Google Sheets" },
+  { value: "email", label: "Email" },
+  { value: "uncategorized", label: "Uncategorized" },
+];
+
+function tokenMatchesFilter(token: string | null, filter: DestinationFilter): boolean {
+  if (filter === "all") return true;
+  if (filter === "github") return !!token && GITHUB_TOKENS.includes(token);
+  if (filter === "sheets") return !!token && SHEETS_TOKENS.includes(token);
+  if (filter === "email") return !!token && EMAIL_TOKENS.includes(token);
+  if (filter === "uncategorized") return !token;
+  return true;
+}
+
 const STATUS_STYLES: Record<string, string> = {
   completed:
     "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
@@ -61,6 +84,7 @@ interface Capture {
   token: string | null;
   timestamp: string;
   status: "completed" | "failed" | "processing";
+  archived: boolean;
 }
 
 function deriveCaptures(logs: LogEntry[]): Capture[] {
@@ -95,6 +119,7 @@ function deriveCaptures(logs: LogEntry[]): Capture[] {
       token: earliest.token,
       timestamp: earliest.timestamp,
       status,
+      archived: !!earliest.archived,
     });
   }
 
@@ -184,47 +209,191 @@ function serviceStyle(token: string | null): string {
   return "border-gray-200 bg-white dark:border-gray-700 dark:bg-transparent";
 }
 
-function CaptureRow({ capture }: { capture: Capture }) {
+function ArchiveIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="3" width="20" height="5" rx="1" />
+      <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
+      <path d="M10 12h4" />
+    </svg>
+  );
+}
+
+const SWIPE_THRESHOLD = 80;
+
+function ResendIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 2v6h-6" />
+      <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+      <path d="M3 22v-6h6" />
+      <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+    </svg>
+  );
+}
+
+function CaptureRow({ capture, onArchive, onUnarchive, onResend }: { capture: Capture; onArchive: (id: number) => void; onUnarchive: (id: number) => void; onResend: (id: number) => Promise<boolean> }) {
   const dest = capture.token ? DESTINATION_LINKS[capture.token] : null;
+  const [offsetX, setOffsetX] = useState(0);
+  const [swiping, setSwiping] = useState(false);
+  const [resendState, setResendState] = useState<"idle" | "sending" | "sent" | "failed">("idle");
+  const startX = useRef(0);
+  const startY = useRef(0);
+  const locked = useRef(false);
+
+  async function handleResendClick() {
+    setResendState("sending");
+    const ok = await onResend(capture.thingyId);
+    setResendState(ok ? "sent" : "failed");
+    setTimeout(() => setResendState("idle"), 2500);
+  }
+
+  function handleTouchStart(e: TouchEvent) {
+    startX.current = e.touches[0].clientX;
+    startY.current = e.touches[0].clientY;
+    locked.current = false;
+    setSwiping(true);
+  }
+
+  function handleTouchMove(e: TouchEvent) {
+    if (!swiping) return;
+
+    const dx = e.touches[0].clientX - startX.current;
+    const dy = e.touches[0].clientY - startY.current;
+
+    if (!locked.current) {
+      if (Math.abs(dy) > Math.abs(dx)) {
+        setSwiping(false);
+        return;
+      }
+      locked.current = true;
+    }
+
+    if (dx < 0) {
+      setOffsetX(Math.max(dx, -150));
+    }
+  }
+
+  function handleTouchEnd() {
+    if (offsetX < -SWIPE_THRESHOLD) {
+      setOffsetX(-300);
+      setTimeout(() => onArchive(capture.thingyId), 200);
+    } else {
+      setOffsetX(0);
+    }
+    setSwiping(false);
+  }
+
+  const isArchived = capture.archived;
 
   return (
-    <li className={`flex items-center gap-3 rounded-lg px-4 py-3 ${serviceStyle(capture.token)}`}>
-      <span
-        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-          capture.status === "completed"
-            ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400"
-            : capture.status === "failed"
-              ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400"
-              : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400"
-        }`}
-      >
-        {STATUS_ICONS[capture.status]}
-      </span>
-
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm text-gray-800 dark:text-gray-200">
-          {capture.content || "(empty)"}
-        </p>
-        <div className="mt-0.5 flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
-          <span>{capture.timestamp ? timeAgo(capture.timestamp) : ""}</span>
-          {dest && (
-            <>
-              <span>&rarr;</span>
-              <ServiceIcon token={capture.token} />
-              <a
-                href={dest.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline dark:text-blue-400"
-              >
-                {dest.label}
-              </a>
-            </>
-          )}
-          {!dest && capture.token && (
-            <span>#{capture.token}</span>
-          )}
+    <li className="relative overflow-hidden rounded-lg">
+      {!isArchived && (
+        <div className="absolute inset-0 z-0 flex items-center justify-end bg-orange-500 px-5">
+          <div className="flex items-center gap-1.5 text-white">
+            <ArchiveIcon className="h-4 w-4" />
+            <span className="text-sm font-semibold">Archive</span>
+          </div>
         </div>
+      )}
+
+      <div
+        className={`relative z-10 flex items-center gap-3 px-4 py-3 ${serviceStyle(capture.token)} ${!isArchived && swiping ? "" : "transition-transform duration-200"} ${isArchived ? "opacity-50" : ""}`}
+        style={{ transform: isArchived ? undefined : `translateX(${offsetX}px)` }}
+        onTouchStart={isArchived ? undefined : handleTouchStart}
+        onTouchMove={isArchived ? undefined : handleTouchMove}
+        onTouchEnd={isArchived ? undefined : handleTouchEnd}
+      >
+        <span
+          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+            capture.status === "completed"
+              ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400"
+              : capture.status === "failed"
+                ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400"
+                : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400"
+          }`}
+        >
+          {STATUS_ICONS[capture.status]}
+        </span>
+
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm text-gray-800 dark:text-gray-200">
+            {capture.content || "(empty)"}
+          </p>
+          <div className="mt-0.5 flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
+            <span>{capture.timestamp ? timeAgo(capture.timestamp) : ""}</span>
+            {dest && (
+              <>
+                <span>&rarr;</span>
+                <ServiceIcon token={capture.token} />
+                <a
+                  href={dest.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline dark:text-blue-400"
+                >
+                  {dest.label}
+                </a>
+              </>
+            )}
+            {!dest && capture.token && (
+              <span>#{capture.token}</span>
+            )}
+          </div>
+        </div>
+
+        {isArchived ? (
+          <button
+            type="button"
+            onClick={() => onUnarchive(capture.thingyId)}
+            aria-label="Unarchive"
+            className="shrink-0 cursor-pointer rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-600 transition-colors hover:bg-blue-200 hover:text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 dark:hover:text-blue-300"
+          >
+            Archived
+          </button>
+        ) : (
+          <div className="hidden shrink-0 items-center gap-1 sm:flex">
+            {capture.token && resendState === "idle" && (
+              <button
+                type="button"
+                onClick={handleResendClick}
+                aria-label="Resend to destination"
+                title="Resend to destination"
+                className="cursor-pointer rounded p-1 text-gray-400 transition-all hover:scale-110 hover:bg-blue-100 hover:text-blue-600 active:scale-95 dark:hover:bg-blue-900/30 dark:hover:text-blue-400"
+              >
+                <ResendIcon className="h-4 w-4" />
+              </button>
+            )}
+            {capture.token && resendState === "sending" && (
+              <span className="rounded p-1">
+                <ResendIcon className="h-4 w-4 animate-spin text-blue-500" />
+              </span>
+            )}
+            {capture.token && resendState === "sent" && (
+              <span
+                className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-medium text-green-600 dark:bg-green-900/30 dark:text-green-400"
+              >
+                Sent
+              </span>
+            )}
+            {capture.token && resendState === "failed" && (
+              <span
+                className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-medium text-red-600 dark:bg-red-900/30 dark:text-red-400"
+              >
+                Failed
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={() => onArchive(capture.thingyId)}
+              aria-label="Archive"
+              title="Archive"
+              className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+            >
+              <ArchiveIcon className="h-4 w-4" />
+            </button>
+          </div>
+        )}
       </div>
     </li>
   );
@@ -265,35 +434,96 @@ function TechnicalLog({ logs }: { logs: LogEntry[] }) {
 export default function ActivityFeed({ refreshKey }: ActivityFeedProps) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [archivedIds, setArchivedIds] = useState<Set<number>>(new Set());
+  const [search, setSearch] = useState("");
+  const [destFilter, setDestFilter] = useState<DestinationFilter>("all");
+  const [showArchived, setShowArchived] = useState(false);
   const isBackgroundPoll = useRef(false);
 
   const fetchLogs = useCallback(async (showSkeleton: boolean) => {
     if (showSkeleton) setLoading(true);
 
     try {
-      const res = await fetch("/api/logs");
+      const url = showArchived ? "/api/logs?includeArchived=true" : "/api/logs";
+      const res = await fetch(url);
       const data = await res.json();
       if (data.success) {
         setLogs(data.logs);
+        setArchivedIds(new Set());
       }
     } catch {
       // Silent failure for background polling
     } finally {
       if (showSkeleton) setLoading(false);
     }
-  }, []);
+  }, [showArchived]);
 
   useEffect(() => {
     fetchLogs(true);
     isBackgroundPoll.current = true;
-  }, [refreshKey, fetchLogs]);
+  }, [refreshKey, fetchLogs, showArchived]);
 
   useEffect(() => {
     const interval = setInterval(() => fetchLogs(false), 5000);
     return () => clearInterval(interval);
   }, [fetchLogs]);
 
-  const captures = deriveCaptures(logs);
+  const handleArchive = useCallback(async (thingyId: number) => {
+    setArchivedIds((prev) => new Set(prev).add(thingyId));
+
+    try {
+      await fetch("/api/archive", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ thingyId, archived: true }),
+      });
+    } catch {
+      setArchivedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(thingyId);
+        return next;
+      });
+    }
+  }, []);
+
+  const handleUnarchive = useCallback(async (thingyId: number) => {
+    try {
+      await fetch("/api/archive", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ thingyId, archived: false }),
+      });
+      fetchLogs(false);
+    } catch {
+      // Silent failure
+    }
+  }, [fetchLogs]);
+
+  const handleResend = useCallback(async (thingyId: number): Promise<boolean> => {
+    try {
+      const res = await fetch("/api/resend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ thingyId }),
+      });
+      const data = await res.json();
+      fetchLogs(false);
+      return !!data.success;
+    } catch {
+      return false;
+    }
+  }, [fetchLogs]);
+
+  const allCaptures = deriveCaptures(logs).filter((c) => !archivedIds.has(c.thingyId));
+
+  const searchLower = search.toLowerCase().trim();
+  const filtered = allCaptures.filter((c) => {
+    if (!tokenMatchesFilter(c.token, destFilter)) return false;
+    if (searchLower && !c.content.toLowerCase().includes(searchLower)) return false;
+    return true;
+  });
+
+  const isFiltering = search.trim() !== "" || destFilter !== "all";
 
   if (loading) {
     return (
@@ -313,14 +543,72 @@ export default function ActivityFeed({ refreshKey }: ActivityFeedProps) {
           Activity
         </h2>
 
-        {captures.length === 0 ? (
+        {allCaptures.length > 0 && (
+          <div className="mb-3 space-y-2">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <svg
+                  className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-gray-500"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.3-4.3" />
+                </svg>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search captures..."
+                  className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+                />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch("")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    aria-label="Clear search"
+                  >
+                    &times;
+                  </button>
+                )}
+              </div>
+              <select
+                value={destFilter}
+                onChange={(e) => setDestFilter(e.target.value as DestinationFilter)}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+              >
+                {DESTINATION_FILTERS.map((f) => (
+                  <option key={f.value} value={f.value}>{f.label}</option>
+                ))}
+              </select>
+            </div>
+            <label className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <input
+                type="checkbox"
+                checked={showArchived}
+                onChange={(e) => setShowArchived(e.target.checked)}
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600"
+              />
+              Include archived
+            </label>
+          </div>
+        )}
+
+        {filtered.length === 0 ? (
           <p className="rounded-lg border border-dashed border-gray-300 px-4 py-8 text-center text-sm text-gray-400 dark:border-gray-600 dark:text-gray-500">
-            No captures yet. Submit your first thought above.
+            {isFiltering
+              ? "No captures match your search."
+              : "No captures yet. Submit your first thought above."}
           </p>
         ) : (
           <ul className="space-y-2">
-            {captures.map((capture) => (
-              <CaptureRow key={capture.thingyId} capture={capture} />
+            {filtered.map((capture) => (
+              <CaptureRow key={capture.thingyId} capture={capture} onArchive={handleArchive} onUnarchive={handleUnarchive} onResend={handleResend} />
             ))}
           </ul>
         )}

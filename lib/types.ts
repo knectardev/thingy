@@ -6,6 +6,7 @@ export interface LogEntry {
   timestamp: string;
   content: string;
   token: string | null;
+  archived?: boolean;
 }
 
 const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
