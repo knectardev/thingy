@@ -6,10 +6,21 @@ vi.mock("@/lib/logger", () => ({
 }));
 
 const mockCreate = vi.fn().mockResolvedValue({ data: { number: 42 } });
+const mockListRepos = vi.fn().mockResolvedValue({
+  data: [
+    { name: "thingy" },
+    { name: "lot" },
+    { name: "my-portfolio" },
+    { name: "awesome-project" },
+  ],
+});
 
 vi.mock("@octokit/rest", () => ({
   Octokit: function () {
-    return { issues: { create: mockCreate } };
+    return {
+      issues: { create: mockCreate },
+      repos: { listForAuthenticatedUser: mockListRepos },
+    };
   },
 }));
 
@@ -53,6 +64,7 @@ describe("handlers", () => {
   beforeEach(() => {
     mockedLog.mockClear();
     mockCreate.mockClear();
+    mockListRepos.mockClear();
     mockAddRow.mockClear();
     mockSendMail.mockClear();
   });
@@ -74,6 +86,59 @@ describe("handlers", () => {
     expect(calls.length).toBeGreaterThanOrEqual(2);
     expect(calls[0][2]).toBe("started");
     expect(calls[calls.length - 1][2]).toBe("completed");
+
+    vi.unstubAllEnvs();
+  });
+
+  it("github handler routes to fuzzy-matched repo when contextToken is provided", async () => {
+    vi.stubEnv("GITHUB_TOKEN", "ghp_fake_token");
+
+    await handleGitHub("Photo upload", 5, "thingy");
+
+    expect(mockListRepos).toHaveBeenCalled();
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        owner: "knectardev",
+        repo: "thingy",
+        title: "Photo upload",
+      })
+    );
+
+    vi.unstubAllEnvs();
+  });
+
+  it("github handler falls back to default repo when no fuzzy match", async () => {
+    vi.stubEnv("GITHUB_TOKEN", "ghp_fake_token");
+
+    await handleGitHub("Fix bug", 6, "nonexistent-xyz-repo");
+
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        owner: "knectardev",
+        repo: "lot",
+        title: "Fix bug",
+      })
+    );
+
+    const logCalls = mockedLog.mock.calls;
+    const fallbackLog = logCalls.find((c) => typeof c[1] === "string" && c[1].includes("falling back"));
+    expect(fallbackLog).toBeDefined();
+
+    vi.unstubAllEnvs();
+  });
+
+  it("github handler uses default repo when no contextToken", async () => {
+    vi.stubEnv("GITHUB_TOKEN", "ghp_fake_token");
+
+    await handleGitHub("Simple task", 7);
+
+    expect(mockListRepos).not.toHaveBeenCalled();
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        owner: "knectardev",
+        repo: "lot",
+      })
+    );
 
     vi.unstubAllEnvs();
   });

@@ -16,9 +16,9 @@ Input → Parser → Router → Handler → External Service
 
 **Key components:**
 
-- `lib/parser.ts` -- Extracts a trailing `#token` (or compound token like `#email chris`) from the input text. Supports voice-to-text normalization (`hashtag`, `keyword` → `#`).
-- `lib/router.ts` -- Maps tokens to handler functions. Unknown tokens fall through to an uncategorized handler so captures are never lost.
-- `lib/handlers/` -- Modular, self-contained integrations. Each handler is an async function with the signature `(content: string, thingyId: number) => Promise<void>`.
+- `lib/parser.ts` -- Extracts a trailing `#token` (or compound token like `#email chris`) from the input text. Supports voice-to-text normalization (`hashtag`, `keyword` → `#`). When `#feature` is present, also extracts a secondary `#context` hashtag for fuzzy repo routing.
+- `lib/router.ts` -- Maps tokens to handler functions. Unknown tokens fall through to an uncategorized handler so captures are never lost. Forwards an optional `contextToken` to handlers for dynamic routing decisions.
+- `lib/handlers/` -- Modular, self-contained integrations. Each handler is an async function with the signature `(content: string, thingyId: number, contextToken?: string | null) => Promise<void>`.
 - `lib/logger.ts` -- Writes structured log entries to `execution_logs` with a 5-second query timeout. Logging failures never crash a request.
 - `app/api/ingest/route.ts` -- POST endpoint. Handles idempotency via client-generated UUIDs, atomic database writes, and routing.
 - `app/api/logs/route.ts` -- GET endpoint. Returns recent activity for the frontend feed.
@@ -32,12 +32,23 @@ Input → Parser → Router → Handler → External Service
 
 | Token | Destination | Notes |
 |---|---|---|
-| `#task`, `#lot`, `#feature` | GitHub Issues | Creates an issue in the configured repo |
+| `#task`, `#lot` | GitHub Issues | Creates an issue in `knectardev/lot` |
+| `#feature` | GitHub Issues | Creates an issue in the default repo (`lot`) |
+| `#feature #<repo>` | GitHub Issues | Fuzzy-matches `<repo>` against your GitHub repos and creates an issue there (see below) |
 | `#lendl task`, `#lendle task` | GitHub Issues | Compound token, typo-tolerant |
 | `#idea`, `#tshirt` | Google Sheets | Appends a row to the configured spreadsheet |
 | `#email chris` | Gmail | Sends to the configured "chris" address |
 | `#email alana` | Gmail | Sends to the configured "alana" address |
 | *(no token)* | Uncategorized | Captured and logged, not routed |
+
+### Fuzzy Repo Routing
+
+When you use `#feature` with a second hashtag (e.g., `"Photo upload #feature #thingy"`), the GitHub handler fuzzy-matches the context word against your GitHub repositories using [Fuse.js](https://www.fusejs.io/). If a match is found, the issue is created in that repo instead of the default. If no match is found, it falls back to the default repo (`knectardev/lot`).
+
+- Order-independent: `#feature #thingy` and `#thingy #feature` both work.
+- The repo list is cached for 5 minutes to avoid hitting the GitHub API on every capture.
+- Match results and confidence scores are logged in the technical log for transparency.
+- Your `GITHUB_TOKEN` must have Issues write access to any repo you want to target.
 
 **Voice-to-text support:** The words `hashtag` and `keyword` are treated as equivalent to `#` (case-insensitive). Spaces after `#` are collapsed. So "buy milk hashtag task" and "buy milk # task" both parse correctly.
 

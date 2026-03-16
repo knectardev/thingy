@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const { content, token } = parseInput(text);
+    const { content, token, contextToken } = parseInput(text);
 
     // Atomic write: insert thingy + first log entry in a single transaction
     await client.sql`BEGIN`;
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     await client.sql`COMMIT`;
 
     // Route after transaction commits so the DB state is consistent
-    await route(content, token, thingyId);
+    await route(content, token, thingyId, contextToken);
 
     return NextResponse.json({ success: true, thingyId, token });
   } catch (error) {

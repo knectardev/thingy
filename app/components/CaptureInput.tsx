@@ -51,6 +51,7 @@ export default function CaptureInput({ onCapture }: CaptureInputProps) {
   } | null>(null);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const speechSupported = useSpeechSupported();
 
   const clearFeedback = useCallback(() => {
@@ -59,6 +60,7 @@ export default function CaptureInput({ onCapture }: CaptureInputProps) {
   }, []);
 
   useEffect(() => {
+    textareaRef.current?.focus();
     return () => {
       recognitionRef.current?.abort();
     };
@@ -167,12 +169,14 @@ export default function CaptureInput({ onCapture }: CaptureInputProps) {
 
       <div className="relative">
         <textarea
+          ref={textareaRef}
           id="capture-input"
           className="w-full min-h-[120px] rounded-lg border border-gray-300 bg-white px-4 py-3 pr-12 text-base placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
           placeholder="Capture a thought..."
           value={text}
           onChange={(e) => setText(e.target.value)}
           disabled={submitting}
+          autoFocus
         />
 
         {speechSupported && (
@@ -273,9 +277,25 @@ export default function CaptureInput({ onCapture }: CaptureInputProps) {
             </p>
             <div className="space-y-4">
               <KeywordGroup
-                title="GitHub Issues (lot)"
-                keywords={["#task", "#lot", "#feature", "#lendl task"]}
+                title="GitHub Issues"
+                keywords={["#task", "#lot", "#lendl task"]}
               />
+              <div>
+                <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                  GitHub Issues (fuzzy routing)
+                </p>
+                <p className="mb-1.5 text-xs text-gray-500 dark:text-gray-400">
+                  Use <span className="font-mono font-semibold">#feature</span> alone to target the default repo, or add a second <span className="font-mono font-semibold">#repo</span> name to target a specific repo:
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="rounded-md bg-blue-50 px-2 py-1 font-mono text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                    #feature
+                  </span>
+                  <span className="rounded-md bg-blue-50 px-2 py-1 font-mono text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                    #feature #thingy
+                  </span>
+                </div>
+              </div>
               <KeywordGroup
                 title="Google Sheets"
                 keywords={["#idea", "#tshirt"]}

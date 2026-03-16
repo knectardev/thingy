@@ -3,7 +3,9 @@
 import { useState } from "react";
 
 const ROUTES = [
-  { token: "#task / #lot / #feature", dest: "GitHub Issues" },
+  { token: "#task / #lot", dest: "GitHub Issues" },
+  { token: "#feature", dest: "GitHub Issues (default repo)" },
+  { token: "#feature #<repo>", dest: "GitHub Issues (fuzzy-matched repo)" },
   { token: "#lendl task", dest: "GitHub Issues" },
   { token: "#idea / #tshirt", dest: "Google Sheets" },
   { token: "#email chris", dest: "Gmail (Chris)" },
@@ -104,6 +106,24 @@ function SidebarContent() {
             </li>
           ))}
         </ul>
+      </div>
+
+      <div>
+        <h3 className="mb-1 font-semibold text-gray-900 dark:text-gray-100">
+          Fuzzy repo routing
+        </h3>
+        <p className="leading-relaxed">
+          Add a second hashtag with{" "}
+          <span className="font-mono text-blue-600 dark:text-blue-400">
+            #feature
+          </span>{" "}
+          to target a specific GitHub repo. For example,{" "}
+          <span className="font-mono text-blue-600 dark:text-blue-400">
+            #feature #thingy
+          </span>{" "}
+          fuzzy-matches against your repos and creates the issue there. If no
+          match is found, it falls back to the default repo.
+        </p>
       </div>
 
       <div>

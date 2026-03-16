@@ -29,25 +29,35 @@ import { emailChris, emailAlana } from "@/lib/handlers/gmail";
 describe("route", () => {
   it("maps 'task' to GitHub handler and 'idea' to Sheets handler", async () => {
     await route("Buy milk", "task", 1);
-    expect(handleGitHub).toHaveBeenCalledWith("Buy milk", 1);
+    expect(handleGitHub).toHaveBeenCalledWith("Buy milk", 1, undefined);
 
     await route("New feature concept", "idea", 2);
-    expect(handleSheets).toHaveBeenCalledWith("New feature concept", 2);
+    expect(handleSheets).toHaveBeenCalledWith("New feature concept", 2, undefined);
   });
 
   it("maps 'lendl' and 'lendle' to GitHub handler", async () => {
     await route("Fix auth flow", "lendl", 10);
-    expect(handleGitHub).toHaveBeenCalledWith("Fix auth flow", 10);
+    expect(handleGitHub).toHaveBeenCalledWith("Fix auth flow", 10, undefined);
 
     await route("Add rate limiting", "lendle", 11);
-    expect(handleGitHub).toHaveBeenCalledWith("Add rate limiting", 11);
+    expect(handleGitHub).toHaveBeenCalledWith("Add rate limiting", 11, undefined);
   });
 
   it("maps 'emailchris' and 'emailalana' to Gmail handlers", async () => {
     await route("Draft a response", "emailchris", 20);
-    expect(emailChris).toHaveBeenCalledWith("Draft a response", 20);
+    expect(emailChris).toHaveBeenCalledWith("Draft a response", 20, undefined);
 
     await route("Pick up groceries", "emailalana", 21);
-    expect(emailAlana).toHaveBeenCalledWith("Pick up groceries", 21);
+    expect(emailAlana).toHaveBeenCalledWith("Pick up groceries", 21, undefined);
+  });
+
+  it("forwards contextToken to the handler", async () => {
+    await route("Photo upload", "feature", 30, "thingy");
+    expect(handleGitHub).toHaveBeenCalledWith("Photo upload", 30, "thingy");
+  });
+
+  it("forwards null contextToken when not provided", async () => {
+    await route("Fix bug", "feature", 31);
+    expect(handleGitHub).toHaveBeenCalledWith("Fix bug", 31, undefined);
   });
 });

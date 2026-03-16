@@ -85,6 +85,7 @@ interface Capture {
   timestamp: string;
   status: "completed" | "failed" | "processing";
   archived: boolean;
+  resolvedRepo: string | null;
 }
 
 function deriveCaptures(logs: LogEntry[]): Capture[] {
@@ -113,6 +114,15 @@ function deriveCaptures(logs: LogEntry[]): Capture[] {
       a.timestamp < b.timestamp ? a : b
     );
 
+    let resolvedRepo: string | null = null;
+    for (const e of entries) {
+      const repoMatch = e.action.match(/\[GitHub\] Issue #\d+ created in (\S+)/);
+      if (repoMatch) {
+        resolvedRepo = repoMatch[1];
+        break;
+      }
+    }
+
     captures.push({
       thingyId,
       content: earliest.content ?? "",
@@ -120,6 +130,7 @@ function deriveCaptures(logs: LogEntry[]): Capture[] {
       timestamp: earliest.timestamp,
       status,
       archived: !!earliest.archived,
+      resolvedRepo,
     });
   }
 
@@ -233,7 +244,10 @@ function ResendIcon({ className }: { className?: string }) {
 }
 
 function CaptureRow({ capture, onArchive, onUnarchive, onResend }: { capture: Capture; onArchive: (id: number) => void; onUnarchive: (id: number) => void; onResend: (id: number) => Promise<boolean> }) {
-  const dest = capture.token ? DESTINATION_LINKS[capture.token] : null;
+  const staticDest = capture.token ? DESTINATION_LINKS[capture.token] : null;
+  const dest = capture.resolvedRepo && staticDest
+    ? { label: `GitHub (${capture.resolvedRepo.split("/").pop()})`, url: `https://github.com/${capture.resolvedRepo}/issues` }
+    : staticDest;
   const [offsetX, setOffsetX] = useState(0);
   const [swiping, setSwiping] = useState(false);
   const [resendState, setResendState] = useState<"idle" | "sending" | "sent" | "failed">("idle");

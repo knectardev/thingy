@@ -1,69 +1,46 @@
-That is a very sensible, "Team of One" defensive maneuver. You are absolutely right—you don't need a full-blown Auth0 or Clerk implementation (which would add immense complexity) to solve the problem of accidental discovery.
+The "Fuzzy Repo Routing" Cursor Prompt
+Context: I want to enhance the #feature hashtag logic to dynamically route issues to the correct GitHub repository based on a second "context" hashtag.
 
-A combination of `robots.txt` and a few other "security through obscurity" layers will make your Thingy effectively invisible to automated scrapers and bored internet explorers.
+Goal: When a user submits a message like "Photo upload #feature #thingy", the system should:
 
-### 1. `robots.txt`
+Identify the primary token (#feature) and the context token (#thingy).
 
-This is your first line of defense against well-behaved crawlers (like Googlebot). Create this in your `public/` directory:
+Search my GitHub account for a repository that best matches "thingy".
 
-```text
-User-agent: *
-Disallow: /
+Create the issue in that specific repo.
 
-```
+Task List:
 
-This tells all compliant bots that no part of your site should be indexed.
+Install Dependency: Add fuse.js for lightweight fuzzy searching.
 
-### 2. Add an `x-robots-tag` Header
+Update Parser: Enhance lib/parser.ts to extract secondary "context" tokens when #feature is present.
 
-Even with `robots.txt`, some bots might ignore it. You can add a response header to your site so that search engines *never* cache or index your pages. In `next.config.ts`, add this:
+Enhance GitHub Handler:
 
-```typescript
-const nextConfig = {
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'X-Robots-Tag',
-            value: 'noindex, nofollow, noarchive',
-          },
-        ],
-      },
-    ];
-  },
-};
+Update lib/handlers/github.ts to include a findBestRepo(searchQuery: string) function.
 
-```
+This function should fetch the list of repositories for the authenticated user (using octokit.repos.listForAuthenticatedUser).
 
-### 3. Basic "Shared Secret" (Optional but Recommended)
+Use fuse.js to find the closest match between the "context" token and the available repo names.
 
-If you are still worried about a human accidentally finding the URL, you can add a tiny layer of "human-only" security without a full auth system. You could check for a specific query parameter in your `middleware.ts`:
+Logic & Error Handling:
 
-```typescript
-// middleware.ts
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+If a match is found (with a high confidence score), proceed to create the issue.
 
-export function middleware(request: NextRequest) {
-  const secret = request.nextUrl.searchParams.get('key');
-  if (secret !== process.env.THINGY_SECRET) {
-    return new NextResponse('Access Denied', { status: 403 });
-  }
-  return NextResponse.next();
-}
+If no match is found (or the score is too low), return a specific error message.
 
-```
+UI Update: Update the ActivityFeed component to display "No matching repo found" if the dynamic routing fails, so the "Glass Box" remains transparent.
 
-If you bookmark your URL as `https://thingy.vercel.app/?key=your-secret-code`, the app will load for you, but anyone else just hitting the URL will get a 403.
+Logging: Log the "closest match" result and the confidence score for debugging.
 
-### 4. Why this keeps it "Thingy"
+Constraint: Ensure the GitHub API call for the repo list is cached or handled efficiently to avoid hitting rate limits on every single capture.
 
-* **Zero Complexity:** You aren't building a login screen, email verification, or session storage.
-* **Effective:** It stops the "random crawler" problem dead in its tracks.
-* **Maintains Speed:** You keep the frictionless, single-click entry you worked so hard to build.
+Why this approach works:
+Fuse.js: This is the industry standard for what you're asking. It’s tiny, doesn't require a backend database, and handles things like "thingie" vs "thingy" perfectly using Bitap algorithms.
 
-By combining the `robots.txt` for bots and a simple URL-based secret for humans, you have essentially made your Thingy a private island on the public web.
+The "Context" Token: By treating the second hashtag as the target, you keep your input syntax clean. You don't have to tell the system "send this to GitHub"; the presence of #feature implies GitHub, and #thingy implies the destination.
 
-**Would you like me to help you draft the `middleware.ts` for that secret-key check, or does the `robots.txt` plus header approach feel like enough security for your current use case?**
+Dynamic Scaling: You no longer have to update your code when you start a new project. As soon as you create a repo on GitHub, "Thingy" will be able to find it via the fuzzy search.
+
+A Small Warning on Performance
+Fetching the full list of your repos on every capture might add ~500ms of latency. Since you're running on Vercel, I'd suggest having the handler fetch the list once and perhaps store it in a simple global variable (which stays warm between some Lambda executions) or just accept the tiny delay since this is a "personal" tool and not a high-traffic API.

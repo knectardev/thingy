@@ -4,7 +4,7 @@ import { handleSheets } from "@/lib/handlers/sheets";
 import { emailChris, emailAlana } from "@/lib/handlers/gmail";
 import { handleUncategorized } from "@/lib/handlers/uncategorized";
 
-export type Handler = (content: string, thingyId: number) => Promise<void>;
+export type Handler = (content: string, thingyId: number, contextToken?: string | null) => Promise<void>;
 
 const handlerMap: Record<string, Handler> = {
   task: handleGitHub,
@@ -21,15 +21,16 @@ const handlerMap: Record<string, Handler> = {
 export async function route(
   content: string,
   token: string | null,
-  thingyId: number
+  thingyId: number,
+  contextToken?: string | null
 ): Promise<void> {
   const resolvedToken = token ?? "uncategorized";
   const handler = handlerMap[resolvedToken] ?? handleUncategorized;
 
-  await log(thingyId, `[Routing] token=${resolvedToken}`, "started");
+  await log(thingyId, `[Routing] token=${resolvedToken}${contextToken ? ` context=${contextToken}` : ""}`, "started");
 
   try {
-    await handler(content, thingyId);
+    await handler(content, thingyId, contextToken);
     await log(thingyId, `[Routing] token=${resolvedToken}`, "completed");
   } catch (error) {
     await log(
