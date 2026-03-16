@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { text, clientId } = body;
+  const { text, clientId: providedClientId } = body;
 
   if (!text || typeof text !== "string") {
     return NextResponse.json(
@@ -24,12 +24,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!clientId || typeof clientId !== "string") {
-    return NextResponse.json(
-      { success: false, error: "Missing or invalid 'clientId' field" },
-      { status: 400 }
-    );
-  }
+  const clientId = providedClientId && typeof providedClientId === "string"
+    ? providedClientId
+    : crypto.randomUUID();
 
   const client = await db.connect();
 
