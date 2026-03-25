@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { GITHUB_BUTTON_REPO_OPTIONS } from "@/lib/github-ui-repos";
 
 interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList;
@@ -26,6 +27,8 @@ declare global {
   }
 }
 
+type GithubRepoTarget = (typeof GITHUB_BUTTON_REPO_OPTIONS)[number];
+
 interface CaptureInputProps {
   onCapture?: () => void;
 }
@@ -42,6 +45,9 @@ function useSpeechSupported(): boolean {
 }
 
 export default function CaptureInput({ onCapture }: CaptureInputProps) {
+  /** Always-on GitHub routing: fuzzy target repo (equivalent to #feature #lot / #thingy). */
+  const [repoTarget, setRepoTarget] = useState<GithubRepoTarget>("lot");
+
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [listening, setListening] = useState(false);
@@ -127,10 +133,16 @@ export default function CaptureInput({ onCapture }: CaptureInputProps) {
 
     try {
       const clientId = crypto.randomUUID();
+      const body = {
+        text: trimmed,
+        clientId,
+        routing: { mode: "github" as const, secondary: repoTarget },
+      };
+
       const res = await fetch("/api/ingest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: trimmed, clientId }),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();
@@ -216,6 +228,26 @@ export default function CaptureInput({ onCapture }: CaptureInputProps) {
         )}
       </div>
 
+      <div className="space-y-1.5">
+        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+          GitHub repo
+        </p>
+        <div
+          className="flex flex-wrap gap-1.5"
+          role="radiogroup"
+          aria-label="Target GitHub repository"
+        >
+          {GITHUB_BUTTON_REPO_OPTIONS.map((name) => (
+            <RoutingTag
+              key={name}
+              label={`#${name}`}
+              selected={repoTarget === name}
+              onClick={() => setRepoTarget(name as GithubRepoTarget)}
+            />
+          ))}
+        </div>
+      </div>
+
       {listening && (
         <p className="text-center text-sm text-red-500 dark:text-red-400 animate-pulse">
           Listening...
@@ -273,37 +305,19 @@ export default function CaptureInput({ onCapture }: CaptureInputProps) {
               </button>
             </div>
             <p className="mb-4 text-xs text-gray-500 dark:text-gray-400">
-              Add a keyword at the end of your capture to route it automatically.
+              Every capture is sent to GitHub Issues. Choose <span className="font-mono font-semibold">#lot</span> or{" "}
+              <span className="font-mono font-semibold">#thingy</span> under the box (same as{" "}
+              <span className="font-mono">#feature #lot</span> / <span className="font-mono">#feature #thingy</span>
+              ). Keywords in your text do not change the destination from this screen.
             </p>
             <div className="space-y-4">
               <KeywordGroup
-                title="GitHub Issues"
-                keywords={["#task", "#lot", "#lendl task"]}
+                title="Other routes (API / advanced)"
+                keywords={["#task", "#idea", "#email chris"]}
               />
-              <div>
-                <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
-                  GitHub Issues (fuzzy routing)
-                </p>
-                <p className="mb-1.5 text-xs text-gray-500 dark:text-gray-400">
-                  Use <span className="font-mono font-semibold">#feature</span> alone to target the default repo, or add a second <span className="font-mono font-semibold">#repo</span> name to target a specific repo:
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  <span className="rounded-md bg-blue-50 px-2 py-1 font-mono text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                    #feature
-                  </span>
-                  <span className="rounded-md bg-blue-50 px-2 py-1 font-mono text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                    #feature #thingy
-                  </span>
-                </div>
-              </div>
-              <KeywordGroup
-                title="Google Sheets"
-                keywords={["#idea", "#tshirt"]}
-              />
-              <KeywordGroup
-                title="Email"
-                keywords={["#email chris", "#email alana"]}
-              />
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Other tokens still work if you call the ingest API without UI routing.
+              </p>
             </div>
           </div>
         </div>
@@ -336,6 +350,31 @@ export default function CaptureInput({ onCapture }: CaptureInputProps) {
         </button>
       )}
     </section>
+  );
+}
+
+function RoutingTag({
+  label,
+  selected,
+  onClick,
+}: {
+  label: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={selected}
+      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+        selected
+          ? "border-blue-500 bg-blue-50 text-blue-800 dark:border-blue-400 dark:bg-blue-900/40 dark:text-blue-200"
+          : "border-gray-300 bg-white text-gray-600 hover:border-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500"
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 

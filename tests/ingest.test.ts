@@ -32,6 +32,10 @@ vi.mock("@/lib/handlers/uncategorized", () => ({
   handleUncategorized: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock("@/lib/router", () => ({
+  route: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { POST } from "@/app/api/ingest/route";
 
 function makeRequest(body: Record<string, unknown>): Request {
@@ -99,5 +103,27 @@ describe("POST /api/ingest", () => {
 
     // Only 1 sql call (the idempotency check) -- no insert happened
     expect(mockSql).toHaveBeenCalledTimes(1);
+  });
+
+  it("applies UI GitHub routing and stores feature token", async () => {
+    mockSql.mockResolvedValueOnce({ rows: [] });
+    mockSql.mockResolvedValueOnce(undefined);
+    mockSql.mockResolvedValueOnce({ rows: [{ id: 99 }] });
+    mockSql.mockResolvedValueOnce(undefined);
+    mockSql.mockResolvedValueOnce(undefined);
+
+    const request = makeRequest({
+      text: "My note",
+      clientId: "550e8400-e29b-41d4-a716-446655440001",
+      routing: { mode: "github", secondary: "thingy" },
+    });
+
+    const response = await POST(request as any);
+    const json = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(json.success).toBe(true);
+    expect(json.thingyId).toBe(99);
+    expect(json.token).toBe("feature");
   });
 });

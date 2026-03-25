@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@vercel/postgres";
-import { parseInput } from "@/lib/parser";
+import { resolveIngestRouting, type UiRoutingPayload } from "@/lib/ingest-routing";
 import { route } from "@/lib/router";
 
+function isValidRouting(x: unknown): x is UiRoutingPayload {
+  if (!x || typeof x !== "object") return false;
+  const mode = (x as UiRoutingPayload).mode;
+  return mode === "github" || mode === "email" || mode === "spreadsheet";
+}
+
 export async function POST(request: NextRequest) {
-  let body: { text?: string; clientId?: string };
+  let body: {
+    text?: string;
+    clientId?: string;
+    routing?: unknown;
+  };
 
   try {
     body = await request.json();
@@ -15,7 +25,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { text, clientId: providedClientId } = body;
+  const { text, clientId: providedClientId, routing: rawRouting } = body;
 
   if (!text || typeof text !== "string") {
     return NextResponse.json(
@@ -45,7 +55,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const { content, token, contextToken } = parseInput(text);
+    const routing = isValidRouting(rawRouting) ? rawRouting : null;
+    const { content, token, contextToken } = resolveIngestRouting(text, routing);
 
     // Atomic write: insert thingy + first log entry in a single transaction
     await client.sql`BEGIN`;
